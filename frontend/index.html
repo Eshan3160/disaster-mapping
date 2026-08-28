@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Disaster Evacuation Map</title>
+
+  <!-- Leaflet CSS (styling for the map) -->
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+<link rel="stylesheet" href="https://unpkg.com/leaflet-routing-machine@3.2.12/dist/leaflet-routing-machine.css" />
+  <style>
+    /* The map needs an explicit height, or it won't show up */
+    #map {
+      height: 100vh;
+      width: 100%;
+    }
+    body {
+      margin: 0; /* remove default page margin */
+    }
+  </style>
+</head>
+<body>
+<div id="disaster-form" style="margin-bottom: 10px;">
+  <input type="text" id="name" placeholder="Disaster name">
+  <select id="type">
+    <option value="flood">Flood</option>
+    <option value="fire">Fire</option>
+  </select>
+  <input type="text" id="lat" placeholder="Latitude">
+  <input type="text" id="lng" placeholder="Longitude">
+  <button onclick="submitDisaster()">Add Disaster</button>
+</div>
+
+  <div id="map"></div>
+  <div style="position: absolute; bottom: 20px; left: 20px; background: white; padding: 10px; border-radius: 5px; z-index: 1000; font-family: sans-serif; box-shadow: 0 1px 5px rgba(0,0,0,0.4);">
+  <div><span style="display:inline-block; width:12px; height:12px; background:blue; border-radius:50%; margin-right:6px;"></span>Flood</div>
+  <div><span style="display:inline-block; width:12px; height:12px; background:red; border-radius:50%; margin-right:6px;"></span>Fire</div>
+</div>
+
+  <!-- Leaflet JS (the map engine) -->
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script src="https://unpkg.com/leaflet-routing-machine@3.2.12/dist/leaflet-routing-machine.js"></script>
+  <script>
+  // Create a map, centered on Hyderabad, zoom level 13
+  const map = L.map('map').setView([17.3850, 78.4867], 13);
+
+  // Add the visual map tiles
+  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+    attribution: '&copy; OpenStreetMap contributors'
+  }).addTo(map);
+
+  // Fetch disaster data from our FastAPI backend
+  fetch('http://127.0.0.1:8000/disasters')
+    .then(response => response.json())
+    .then(data => {
+     data.forEach(disaster => {
+        let color = 'gray';
+      if (disaster.type === 'flood') color = 'blue';
+      if (disaster.type === 'fire') color = 'red';
+
+      L.circleMarker([disaster.lat, disaster.lng], {
+        radius: 10,
+        fillColor: color,
+        color: '#000',
+        weight: 1,
+        fillOpacity: 0.8
+      }).addTo(map)
+        .bindPopup(`
+  <b>${disaster.name}</b> (${disaster.type})<br>
+  <button onclick="deleteDisaster(${disaster.id})">Delete</button>
+  <button onclick="editDisaster(${disaster.id}, '${disaster.name}', '${disaster.type}', ${disaster.lat}, ${disaster.lng})">Edit</button>
+  <button onclick="showEvacuationRoute(${disaster.lat}, ${disaster.lng})">Show Evacuation Route</button>
+`);
+    });
+    })
+    .catch(error => console.error('Error fetching disaster data:', error));
+    function deleteDisaster(id) {
+  if (!confirm("Delete this disaster?")) return;
+  fetch(`http://127.0.0.1:8000/disasters/${id}`, { method: "DELETE" })
+    .then(res => res.json())
+    .then(data => {
+      alert(data.message);
+      location.reload();
+    });
+}
+
+function editDisaster(id, name, type, lat, lng) {
+  const newName = prompt("Name:", name);
+  const newType = prompt("Type (flood/fire):", type);
+  if (!newName || !newType) return;
+
+  fetch(`http://127.0.0.1:8000/disasters/${id}`, {
+    method: "PUT",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ name: newName, type: newType, lat: lat, lng: lng })
+  })
+    .then(res => res.json())
+    .then(data => {
+      alert(data.message);
+      location.reload();
+    });
+}
+    function submitDisaster() {
+  const newDisaster = {
+    name: document.getElementById("name").value,
+    type: document.getElementById("type").value,
+    lat: parseFloat(document.getElementById("lat").value),
+    lng: parseFloat(document.getElementById("lng").value)
+  };
+
+  fetch("http://127.0.0.1:8000/disasters", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(newDisaster)
+  })
+  .then(response => response.json())
+  .then(data => {
+    console.log("Added:", data);
+    location.reload();
+  });
+}
+let routeControl = null;
+
+async function showEvacuationRoute(disasterLat, disasterLng) {
+  const res = await fetch(`http://127.0.0.1:8000/nearest-safe-zone?lat=${disasterLat}&lng=${disasterLng}`);
+  const safeZone = await res.json();
+
+  if (routeControl) {
+    map.removeControl(routeControl);
+  }
+
+  routeControl = L.Routing.control({
+    waypoints: [
+      L.latLng(disasterLat, disasterLng),
+      L.latLng(safeZone.lat, safeZone.lng)
+    ],
+    routeWhileDragging: false,
+    show: false
+  }).addTo(map);
+}
+
+
+</script>
+
+</body>
+</html>
