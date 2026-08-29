@@ -48,7 +48,7 @@
   }).addTo(map);
 
   // Fetch disaster data from our FastAPI backend
-  fetch('http://127.0.0.1:8000/disasters')
+  fetch('https://disaster-mapping.onrender.com/disasters')
     .then(response => response.json())
     .then(data => {
      data.forEach(disaster => {
@@ -74,7 +74,7 @@
     .catch(error => console.error('Error fetching disaster data:', error));
     function deleteDisaster(id) {
   if (!confirm("Delete this disaster?")) return;
-  fetch(`http://127.0.0.1:8000/disasters/${id}`, { method: "DELETE" })
+  fetch(`https://disaster-mapping.onrender.com/disasters/${id}`, { method: "DELETE" })
     .then(res => res.json())
     .then(data => {
       alert(data.message);
@@ -87,7 +87,7 @@ function editDisaster(id, name, type, lat, lng) {
   const newType = prompt("Type (flood/fire):", type);
   if (!newName || !newType) return;
 
-  fetch(`http://127.0.0.1:8000/disasters/${id}`, {
+  fetch(`https://disaster-mapping.onrender.com/disasters/${id}`, {
     method: "PUT",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ name: newName, type: newType, lat: lat, lng: lng })
@@ -106,7 +106,7 @@ function editDisaster(id, name, type, lat, lng) {
     lng: parseFloat(document.getElementById("lng").value)
   };
 
-  fetch("http://127.0.0.1:8000/disasters", {
+  fetch("https://disaster-mapping.onrender.com/disasters", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(newDisaster)
@@ -120,7 +120,7 @@ function editDisaster(id, name, type, lat, lng) {
 let routeControl = null;
 
 async function showEvacuationRoute(disasterLat, disasterLng) {
-  const res = await fetch(`http://127.0.0.1:8000/nearest-safe-zone?lat=${disasterLat}&lng=${disasterLng}`);
+  const res = await fetch(`https://disaster-mapping.onrender.com/nearest-safe-zone?lat=${disasterLat}&lng=${disasterLng}`);
   const safeZone = await res.json();
 
   if (routeControl) {
