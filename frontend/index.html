@@ -23,6 +23,7 @@
   <select id="type">
     <option value="flood">Flood</option>
     <option value="fire">Fire</option>
+    <option value="eathquake">Eathquake</option>
   </select>
   <input type="text" id="lat" placeholder="Latitude">
   <input type="text" id="lng" placeholder="Longitude">
@@ -33,6 +34,8 @@
   <div style="position: absolute; bottom: 20px; left: 20px; background: white; padding: 10px; border-radius: 5px; z-index: 1000; font-family: sans-serif; box-shadow: 0 1px 5px rgba(0,0,0,0.4);">
   <div><span style="display:inline-block; width:12px; height:12px; background:blue; border-radius:50%; margin-right:6px;"></span>Flood</div>
   <div><span style="display:inline-block; width:12px; height:12px; background:red; border-radius:50%; margin-right:6px;"></span>Fire</div>
+  <div><span style="display:inline-block; width:12px; height:12px; background:orange; border-radius:50%; margin-right:6px;"></span>Earthquake</div>
+
 </div>
 
   <!-- Leaflet JS (the map engine) -->
@@ -40,7 +43,7 @@
 <script src="https://unpkg.com/leaflet-routing-machine@3.2.12/dist/leaflet-routing-machine.js"></script>
   <script>
   // Create a map, centered on Hyderabad, zoom level 13
-  const map = L.map('map').setView([17.3850, 78.4867], 13);
+  const map = L.map('map').setView([35.6900, 139.8200], 12);
 
   // Add the visual map tiles
   L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
@@ -55,6 +58,7 @@
         let color = 'gray';
       if (disaster.type === 'flood') color = 'blue';
       if (disaster.type === 'fire') color = 'red';
+      if (disaster.type === 'earthquake') color = 'orange';
 
       L.circleMarker([disaster.lat, disaster.lng], {
         radius: 10,
@@ -84,7 +88,7 @@
 
 function editDisaster(id, name, type, lat, lng) {
   const newName = prompt("Name:", name);
-  const newType = prompt("Type (flood/fire):", type);
+  const newType = prompt("Type (flood/fire/earthquake):", type);
   if (!newName || !newType) return;
 
   fetch(`https://disaster-mapping.onrender.com/disasters/${id}`, {

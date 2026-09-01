@@ -57,9 +57,9 @@ def get_disasters():
     return rows # RealDictCursor already returns list of dicts
 
 safe_zones = [
-    {"id": 1, "name": "City Stadium Shelter", "lat": 17.4239, "lng": 78.4738},
-    {"id": 2, "name": "Community Hall", "lat": 17.4483, "lng": 78.3915},
-    {"id": 3, "name": "Open Ground - Park", "lat": 17.3850, "lng": 78.4867},
+    {"id": 1, "name": "Ojima-Komatsugawa Park(Flood Evacuation Site)", "lat": 35.6928, "lng": 139.8496},
+    {"id": 2, "name": "Shirahige-Higashi Disaster Prevention Complex(Fire Evacuation Site) ", "lat": 35.7290, "lng": 139.8120},
+    
 ]
 
 @app.get("/nearest-safe-zone")
